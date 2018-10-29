@@ -1,0 +1,249 @@
+[
+    {
+        "id": "bc6012ce.56132",
+        "type": "tab",
+        "label": "Wonderware Simple",
+        "disabled": false,
+        "info": "A simplified version connecting data to\nonline.wonderware.com\n\nThis version writes data as it is received and\ndoesnt' have the caching and remote timestamp\nfeatures."
+    },
+    {
+        "id": "1c7fc5bb.ba3d6a",
+        "type": "comment",
+        "z": "bc6012ce.56132",
+        "name": "Sample flow to send data to online.wonderware.com with emphasis on SIMPLICITY",
+        "info": "This will assume a topic name is a tagname\nand msg.payload is the value. For example:\nmsg.topic = \"tapia.home.familyroom.temperature\"\nmsg.value = 72.5\n\n\n/*\nWonderware example from online.wonderware.com\n{\n  \"data\": [\n    {\n      \"dateTime\": \"2017-03-20T12:21:12.199Z\",\n      \"Reactor3.Level\": 1.51860072870498,\n      \"Reactor3.Temp\": 27.1360543141452,\n      \"Reactor3.InletValve\": 0,\n      \"Reactor3.Step\": 7,\n      \"Line3.Units\": 1518,\n      \"Line3.Product\": \"BRN\"\n    }\n  ]\n}\n*/\n",
+        "x": 310,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "54df6fdf.75846",
+        "type": "credentials",
+        "z": "bc6012ce.56132",
+        "name": "Wonderware Bearer Token",
+        "props": [
+            {
+                "value": "Authorization",
+                "type": "msg"
+            }
+        ],
+        "x": 300,
+        "y": 200,
+        "wires": [
+            [
+                "f00d388d.8e2c58"
+            ]
+        ]
+    },
+    {
+        "id": "ec9a140f.a03568",
+        "type": "inject",
+        "z": "bc6012ce.56132",
+        "name": "",
+        "topic": "my.temperature",
+        "payload": "11.1",
+        "payloadType": "num",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 130,
+        "y": 280,
+        "wires": [
+            [
+                "8470175.b6ee8e8"
+            ]
+        ]
+    },
+    {
+        "id": "bf33b6e0.861318",
+        "type": "inject",
+        "z": "bc6012ce.56132",
+        "name": "",
+        "topic": "my.temperature",
+        "payload": "22.2",
+        "payloadType": "num",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 130,
+        "y": 320,
+        "wires": [
+            [
+                "8470175.b6ee8e8"
+            ]
+        ]
+    },
+    {
+        "id": "794cdbc9.120694",
+        "type": "function",
+        "z": "bc6012ce.56132",
+        "name": "Wonderware JSON format",
+        "func": "/*\ninput message should contain:\nmsg.timestamp ie 1514764800000 is an epoch milliseconds timestamp representing 2018.01.01. at 00:00:00.000\n (if msg.timestamp does not exist then \"now\" will be used)\n for simplicity, we assumed a single value payload (not a multivariable payload object):\n    msg.payload ie 72.1 or any string or number representing the value for the topic\n    msg.topic ie diningroom/temperature\n*/\n//use timestamp if it exists otherwise default to now\n// this works and is efficient but I'm leaning toward \"non-function\", flow-based solutions\nif ((typeof msg.timestamp !== 'undefined')){dtstring = new Date(msg.timestamp).toISOString();} \nelse {dtstring = new Date().toISOString();}\n\nvar obj = {};\nobj[\"dateTime\"] = dtstring;\nobj[msg.topic] = msg.payload;\n\nvar data = {\"data\":[]};\ndata.data.push(obj);\nmsg.payload=data;\n//msg.payload = JSON.stringify( {\"data\":[{}]},null,\"\\t\");\n\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 620,
+        "y": 140,
+        "wires": [
+            [
+                "9fde961b.618f58"
+            ]
+        ]
+    },
+    {
+        "id": "f00d388d.8e2c58",
+        "type": "function",
+        "z": "bc6012ce.56132",
+        "name": "prepare htttp",
+        "func": "/* Example of syntax (replace token with real one):\nmsg.headers = {\n    \"Authorization\" : \"Bearer aThisIsMyFakeTokenYoursWillBeLonger-AjsTIEvRKKQ\",\n    \"Content-type\" : \"application/json\"\n    };\nmsg.url = \"https://online.wonderware.com/apis/upload/datasource\";\nmsg.method = \"POST\";\n*/\n\nmsg.headers = {\n    \"Content-type\" : \"application/json\"\n};\nmsg.url = \"https://online.wonderware.com/apis/upload/datasource\";\nmsg.method = \"POST\";\n\n//move Athorization inside headers:\nmsg.headers.Authorization = msg.Authorization;  //copy Authorization to be under headers\ndelete msg.Authorization;                       // and remove from old location\nreturn msg;\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 510,
+        "y": 200,
+        "wires": [
+            [
+                "486b4641.981d08"
+            ]
+        ]
+    },
+    {
+        "id": "486b4641.981d08",
+        "type": "http request",
+        "z": "bc6012ce.56132",
+        "name": "",
+        "method": "use",
+        "ret": "txt",
+        "url": "",
+        "tls": "",
+        "x": 670,
+        "y": 200,
+        "wires": [
+            [
+                "4e361617.8aea98"
+            ]
+        ]
+    },
+    {
+        "id": "8470175.b6ee8e8",
+        "type": "switch",
+        "z": "bc6012ce.56132",
+        "name": "",
+        "property": "timestamp",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "null"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 110,
+        "y": 140,
+        "wires": [
+            [
+                "d66335f2.9a7498"
+            ],
+            [
+                "2b09b6c9.f641fa"
+            ]
+        ]
+    },
+    {
+        "id": "d66335f2.9a7498",
+        "type": "change",
+        "z": "bc6012ce.56132",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timestamp",
+                "pt": "msg",
+                "to": "",
+                "tot": "date"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 270,
+        "y": 120,
+        "wires": [
+            [
+                "2b09b6c9.f641fa"
+            ]
+        ]
+    },
+    {
+        "id": "2b09b6c9.f641fa",
+        "type": "function",
+        "z": "bc6012ce.56132",
+        "name": "merge",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 430,
+        "y": 140,
+        "wires": [
+            [
+                "794cdbc9.120694"
+            ]
+        ]
+    },
+    {
+        "id": "6829b272.75473c",
+        "type": "comment",
+        "z": "bc6012ce.56132",
+        "name": "XXXXXXXX  add a timestamp if there isn't one XXXXXXXX",
+        "info": "",
+        "x": 370,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "4e361617.8aea98",
+        "type": "debug",
+        "z": "bc6012ce.56132",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 810,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "9fde961b.618f58",
+        "type": "json",
+        "z": "bc6012ce.56132",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 810,
+        "y": 140,
+        "wires": [
+            [
+                "54df6fdf.75846"
+            ]
+        ]
+    },
+    {
+        "id": "ea4862fa.ba67b",
+        "type": "comment",
+        "z": "bc6012ce.56132",
+        "name": "JSON OBJ > JSON STRING",
+        "info": "",
+        "x": 740,
+        "y": 100,
+        "wires": []
+    }
+]
