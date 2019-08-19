@@ -1,7 +1,9 @@
 # node-red-to-online.wonderware.com
 This is a node-red example of sending data to online.wonderware.com's REST API using the JSON format.
 
-It is an intentionnally simple example (without caching, queueing, buffering, store-forward, etc.).
+It is an intentionally simple example (without caching, queueing, buffering, store-forward, etc.).
+
+Note: First install node-red-contrib-credentials via "Manage Palette" (thank you Mike Wagner!).
 
 Note: the below image doesn't show at flows.nodered.org nor the does the "view at github" link in the upper right corner because it somehow created a gist.github.com instead of regular github entry and those don't seem to be able to host screen shots.
 
